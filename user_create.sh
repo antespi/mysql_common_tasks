@@ -1,11 +1,22 @@
 #!/bin/bash
 
-if [ ! $# -eq 2 ]; then echo "Usage: $0 <username> <password>"; exit 1; fi
+if [ ! $# -eq 1 ]; then echo "Usage: $0 <username>"; exit 1; fi
 
-exists=`echo "SELECT User FROM mysql.user WHERE User = '$1';" | mysql`
+USERNAME="$1"
+PASSWORD=
+RE_PASSWORD=
 
-if [ -n "$exists" ]; then echo "User $1 already exists"; exit 2; fi
+exists=`echo "SELECT User FROM mysql.user WHERE User = '$USERNAME';" | mysql`
 
-echo "CREATE USER '$1'@'localhost' IDENTIFIED BY  '$2';" | mysql || exit $?
-echo "GRANT USAGE ON * . * TO  '$1'@'localhost' IDENTIFIED BY  '$2' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0 ;" | mysql
+if [ -n "$exists" ]; then echo "User $USERNAME already exists"; exit 2; fi
+
+read -s -p "Enter password: " PASSWORD; echo
+read -s -p "Re-enter password: " RE_PASSWORD; echo
+
+if [ "$PASSWORD" != "$RE_PASSWORD" ]; then
+   echo "New passwords are not equal, try again"; exit 3;
+fi
+
+echo "CREATE USER '$USERNAME'@'localhost' IDENTIFIED BY  '$PASSWORD';" | mysql || exit $?
+echo "GRANT USAGE ON * . * TO  '$USERNAME'@'localhost' IDENTIFIED BY  '$PASSWORD' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 MAX_USER_CONNECTIONS 0 ;" | mysql
 
